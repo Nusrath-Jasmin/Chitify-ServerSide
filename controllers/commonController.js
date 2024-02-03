@@ -35,33 +35,33 @@ const signup=async (req,res)=>{
 
 const verifyOtp=async(req,res)=>{
 
-    console.log(req.body)
+  console.log(req.body)
 
-    const {firstName,lastName,email,password,phone,otp}=req.body
+  const {firstName,lastName,email,password,phone,otp}=req.body
 
-    // verification check
-    const verificationCheck =await client.verify.v2.services(serviceSid)
-    .verificationChecks.create({to: `+91${phone}`, code: otp});
+  // verification check
+  const verificationCheck =await client.verify.v2.services(serviceSid)
+  .verificationChecks.create({to: `+91${phone}`, code: otp});
 
-    if (verificationCheck && verificationCheck.status==='approved') {
-         const newUser = new User({
-        firstName,
-        lastName,
-        password,
-        phone,
-        email
+  if (verificationCheck && verificationCheck.status==='approved') {
+       const newUser = new User({
+      firstName,
+      lastName,
+      password,
+      phone,
+      email
+    });
+
+    const savedUser = await newUser.save();
+
+      
+    if(savedUser){
+      res.json({
+        success: true,
+        user: true,
+        message: 'successfully verified user',
       });
-
-      const savedUser = await newUser.save();
-
-        
-      if(savedUser){
-        res.json({
-          success: true,
-          user: true,
-          message: 'successfully verified user',
-        });
-        }
+      }
 
 
 }}

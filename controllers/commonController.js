@@ -1,72 +1,114 @@
 const User = require("../models/userModel");
-const sendOtp=require('../Verification/otpSend')
-require('dotenv').config();
-const accountSid=process.env.ACCOUNTSIDTWILIO;
-const authId=process.env.AUTHTOCKENTWILIO;
-const serviceSid=process.env.SERVICESIDTWILIO;
-const countryCode=process.env.COUNTRYCODE;
-const twilio =require('twilio');
-const client=twilio(accountSid, authId);
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const sendOtp = require("../Verification/otpSend");
 
-const signup=async (req,res)=>{
+const twilio = require("twilio");
+require("dotenv").config();
 
-    console.log(req.body)
+const accountSid = process.env.ACCOUNTSIDTWILIO;
+const authId = process.env.AUTHTOCKENTWILIO;
+const serviceSid = process.env.SERVICESIDTWILIO;
+const secretKey = process.env.SECRET_KEY;
 
-    const {firstName,lastName,email,password,phone}=req.body
+const client = twilio(accountSid, authId);
 
-    const exist=await User.findOne({phone});
+// singnup form submission/otp generation
+const signup = async (req, res) => {
 
-    if(exist){
-        res.json({exist:true,message: 'user already exist.please login'});
-    }else{
-      sendOtp(phone)
-          .then((msg)=>{
-            res.json({otpsend: true, message: 'otp send successfully'});
-          })
-          .catch((err)=>{
-            res.json({otpsend: false, message: 'otp send failed'});
-          });
-    }
+  console.log(req.body);
+  const { phone } = req.body;
+  const exist = await User.findOne({ phone });
 
-   
+  if (exist) {
+    res.json({ exist: true, message: "user already exist.Please login to continue" });
+  } else {
+    sendOtp(phone)
+      .then(() => {
+        res.json({ otpsend: true, message: "otp send successfully" });
+      })
+      .catch(() => {
+        res.json({ otpsend: false, message: "otp send failed" });
+      });
+  }
+};
 
-    
-}
+// otp verification logic
+const verifyOtp = async (req, res) => {
 
-const verifyOtp=async(req,res)=>{
+  console.log(req.body);
 
-  console.log(req.body)
-
-  const {firstName,lastName,email,password,phone,otp}=req.body
+  const { firstName, lastName, email, password, phone, otp } = req.body;
 
   // verification check
-  const verificationCheck =await client.verify.v2.services(serviceSid)
-  .verificationChecks.create({to: `+91${phone}`, code: otp});
+  const verificationCheck = await client.verify.v2
+    .services(serviceSid)
+    .verificationChecks.create({ to: `+91${phone}`, code: otp });
 
-  if (verificationCheck && verificationCheck.status==='approved') {
-       const newUser = new User({
+  if (verificationCheck && verificationCheck.status === "approved") {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
       firstName,
       lastName,
-      password,
+      password: hashedPassword,
       phone,
-      email
+      email,
+      phoneVerified:true
     });
 
     const savedUser = await newUser.save();
+    console.log("saved",savedUser);
+    if (savedUser) {
 
-      
-    if(savedUser){
+      const find=User.findOne({phone})
+      console.log("finded",find,find._id,find.userType);
+      const payload = { id:savedUser._id, userType:savedUser.userType};
+      const token = jwt.sign(payload, secretKey, { expiresIn: "1h" });
+
       res.json({
+        token:token,
         success: true,
+        error: false,
         user: true,
-        message: 'successfully verified user',
+        message: "successfully verified user",
       });
+    }
+  } else {
+    res.json({ error: true, message: "otp does not match" });
+  }
+};
+
+//login user form submission logic
+const login = async (req, res) => {
+
+  console.log(req.body);
+
+  try {
+    const { phone, password } = req.body;
+    const exist = await User.findOne({ phone });
+
+    if (exist) {
+      const isPasswordMatch = await bcrypt.compare(password, exist.password);
+
+      if (isPasswordMatch) {
+        const payload = { id: exist._id, userType: exist.userType };
+        const token = jwt.sign(payload, secretKey);
+        console.log("JWT Token:", token);
+        res.json({ token });
+      } else {
+        res.json({ error: true, message: "incorrect password" });
       }
+    } else {
+      res.json({error:true, message: "invalid credentials" });
+    }
+  } catch (error) {
+    res.json({ error: true, message: "error during login" });
+  }
+};
 
-
-}}
-
-module.exports={
-    signup,
-    verifyOtp
-}
+module.exports = {
+  signup,
+  verifyOtp,
+  login,
+};

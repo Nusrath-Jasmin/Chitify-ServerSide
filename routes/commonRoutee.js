@@ -11,4 +11,13 @@ router.post("/verifyOtp", commonController.verifyOtp);
 // login user
 router.post("/login", commonController.login);
 
+//forgot password
+router.post("/forgotPassword",commonController.forgotPasswordSendOtp)
+
+//forgot password verify otp
+router.post('/verify-user',commonController.verifyUser)
+
+// updatepassword
+router.post('/update-password',commonController.UpdatePassword)
+
 module.exports = router;

@@ -21,9 +21,9 @@ const signup = async (req, res) => {
   const exist = await User.findOne({ phone });
 
   if (exist) {
-    res.json({ exist: true, message: "user already exist.Please login to continue" });
+    res.json({ exist: true,otpsend:false, message: "user already exist.Please login to continue" });
   } else {
-    sendOtp(phone)
+    sendOtp.otpgenerate(phone)
       .then(() => {
         res.json({ otpsend: true, message: "otp send successfully" });
       })
@@ -107,8 +107,71 @@ const login = async (req, res) => {
   }
 };
 
+//forgotPasswordSendOtp
+const forgotPasswordSendOtp= async (req,res)=>{
+  console.log('phone',req.body)
+
+  const { phone } = req.body;
+  const exist = await User.findOne({ phone });
+
+  if (exist) {
+    sendOtp.otpgenerate(phone)
+      .then(() => {
+        phoneToVerify=phone
+        res.json({ otpsend: true, message: "otp send successfully",phone:phone});
+      })
+      .catch(() => {
+        res.json({ otpsend: false, message: "otp send failed" });
+      });
+  }
+  else{
+    res.json({otpsend:false,message:"no user found"})
+  }
+}
+
+// verifyUser
+const verifyUser= async (req,res)=>{
+
+  console.log("user verify",req.body);
+  const {phone,otp}=req.body
+  sendOtp.verifyOtp(phone,otp)
+    .then((verificationCheck)=>{
+      console.log("verificationController",verificationCheck);
+      if (verificationCheck && verificationCheck.status === "approved") {
+        res.json({otpVerified:true})
+      }
+      else{
+        res.json({otpVerified:false})
+      }
+    })
+    .catch(()=>{
+      res.json({otpVerified:false})
+    })
+}
+
+
+// update password
+const UpdatePassword= async (req,res)=>{
+  console.log("req",req.body)
+  const { phone,password}=req.body
+  const newpassword= await bcrypt.hash(password, 10);
+
+  const save=await User.findOneAndUpdate({phone},{$set:{password:newpassword}})
+  if(save){
+    console.log("password updated")
+    res.json({updated:true,message:"password updated"})
+  }
+  else{
+    res.json({updated:false,message:"error changing password"})
+  }
+
+}
+
 module.exports = {
   signup,
   verifyOtp,
   login,
+  forgotPasswordSendOtp,
+  verifyUser,
+  UpdatePassword
 };

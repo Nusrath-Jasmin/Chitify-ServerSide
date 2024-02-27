@@ -7,7 +7,7 @@ const twilio = require("twilio");
 const client = twilio(accountSid, authId);
 
 // code to send otp
-const otpgenerate = async function (phone) {
+const sendOtp = async function (phone) {
   console.log(phone);
   verification = await client.verify.v2
     .services(`${serviceSid}`)
@@ -34,6 +34,6 @@ const verifyOtp = async function (phone, otp) {
 
 
 module.exports = {
-  otpgenerate,
+  sendOtp,
   verifyOtp
 }

@@ -15,5 +15,11 @@ router.post('/AddAsOwner',authenticateToken,adminController.AddAsOwner)
 //RejectRequest
 router.post('/RejectRequest',authenticateToken,adminController.RejectRequest)
 
+//list all users
+router.get('/list-users',authenticateToken,adminController.listUsers)
+
+//list all chits
+router.get('/list-chits',authenticateToken,adminController.listChits)
+
 
 module.exports=router

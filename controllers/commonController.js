@@ -75,7 +75,7 @@ const login = async (req, res) => {
         const payload = { id: exist._id, userType: exist.userType };
         const token = jwt.sign(payload, secretKey);
         console.log("JWT Token:", token);
-        res.json({ token });
+        res.  json({ token });
       } else {
         res.json({ error: true, message: "incorrect password" });
       }

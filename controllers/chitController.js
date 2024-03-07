@@ -7,6 +7,7 @@ const Participants = require("../models/participants");
 const Request = require("../models/RequestToJoin");
 const User = require("../models/userModel");
 const Invitation = require('../models/Invitation');
+const Payment = require('../models/paymentModel');
 
 let otp = "";
 // Function to generate a random OTP
@@ -126,6 +127,7 @@ const RegisterChit = async (req, res) => {
       participants,
       chitType,
       startDate,
+      lotDate
     } = req.body;
 
     const newChitty = new Chitty({
@@ -137,6 +139,7 @@ const RegisterChit = async (req, res) => {
       participants,
       chitType,
       startDate,
+      lotDate
     });
 
     await newChitty.save();
@@ -163,7 +166,8 @@ const OwnedChitties = async (req, res) => {
 
 const UpdateChitty = async (req, res) => {
   const { _id, ...update } = req.body;
-
+  console.log("updating");
+  console.log(req.body,"hai");
   try {
     const updatedChitty = await Chitty.findByIdAndUpdate(_id, update, {
       new: true,
@@ -657,6 +661,47 @@ const getUserJoinedChits = async (req, res) => {
 };
 
 
+// Controller function to get the status of each month
+getMonthlyStatus = async (req, res) => {
+  try {
+    const chitId  = req.params.chitId;
+    const userId=req.user.id;
+
+    // Get the chit details including starting month and duration
+    const chit = await Chitty.findById(chitId);
+    if (!chit) {
+      return res.status(404).json({ error: 'Chit not found' });
+    }
+
+    // Generate a list of months from starting month to chit end
+    const startingMonthParts = chit.StartingMonth.split('-');
+    const startingMonth = parseInt(startingMonthParts[1]);
+    const endingMonth = startingMonth + chit.duration - 1;
+    const monthsList = [];
+    for (let month = startingMonth; month <= endingMonth; month++) {
+      monthsList.push(month.toString());
+    }
+console.log(monthsList);
+    // Get the payments for the chit
+    const payments = await Payment.find({ chitId,userId });
+
+    // Prepare the response with status of each month
+    // Prepare the response with status of each month
+const monthlyStatus = monthsList.map(month => {
+  const monthNumber = parseInt(month);
+  console.log("month",monthNumber);
+  const monthName = new Date(Date.UTC(2000, monthNumber - 1, 1)).toLocaleString('en', { month: 'long' });
+  const isPaid = payments.some(payment => payment.month === month);
+  return { month: monthName, isPaid };
+});
+
+    console.log(monthlyStatus);
+    res.status(200).json(monthlyStatus);
+  } catch (error) {
+    console.error('Error fetching monthly status:', error);
+    res.status(500).json({ error: 'An error occurred while fetching monthly status' });
+  }
+};
 
 module.exports = {
   sendEmailOtp,
@@ -686,5 +731,6 @@ module.exports = {
   rejectInvitation,
   updateProfile,
   userProfile,
-  getUserJoinedChits
+  getUserJoinedChits,
+  getMonthlyStatus
 };

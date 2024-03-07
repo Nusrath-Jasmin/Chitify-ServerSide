@@ -88,4 +88,7 @@ router.get('/userProfile',authenticateToken,userController.userProfile)
 //list all joined chits
 router.get('/allJoinedChits',authenticateToken,userController.getUserJoinedChits)
 
+//get monthly status
+router.get('/getMonthlyStatus/:chitId',authenticateToken,userController.getMonthlyStatus)
+
 module.exports=router

@@ -6,8 +6,8 @@ const Chitty = require("../models/ChitModel");
 const Participants = require("../models/participants");
 const Request = require("../models/RequestToJoin");
 const User = require("../models/userModel");
-const Invitation = require('../models/Invitation');
-const Payment = require('../models/paymentModel');
+const Invitation = require("../models/Invitation");
+const Payment = require("../models/paymentModel");
 
 let otp = "";
 // Function to generate a random OTP
@@ -127,7 +127,7 @@ const RegisterChit = async (req, res) => {
       participants,
       chitType,
       startDate,
-      lotDate
+      lotDate,
     } = req.body;
 
     const newChitty = new Chitty({
@@ -139,7 +139,7 @@ const RegisterChit = async (req, res) => {
       participants,
       chitType,
       startDate,
-      lotDate
+      lotDate,
     });
 
     await newChitty.save();
@@ -167,7 +167,7 @@ const OwnedChitties = async (req, res) => {
 const UpdateChitty = async (req, res) => {
   const { _id, ...update } = req.body;
   console.log("updating");
-  console.log(req.body,"hai");
+  console.log(req.body, "hai");
   try {
     const updatedChitty = await Chitty.findByIdAndUpdate(_id, update, {
       new: true,
@@ -367,23 +367,20 @@ const SubmitRequest = async (req, res) => {
     }
   } catch (error) {
     console.error("Error creating request:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "An error occurred while saving the request",
-      });
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while saving the request",
+    });
   }
 };
 
 const getRequests = async (req, res) => {
-  console.log('..........................................');
+  console.log("..........................................");
   const chitId = req.params.id;
   console.log(chitId);
   const requests = await Request.find({ chitId });
   if (requests.length === 0) {
-    return res
-      .json([]);
+    return res.json([]);
   }
   const requestedUsers = requests[0].requestedUsers;
   console.log(requestedUsers);
@@ -460,7 +457,7 @@ const rejectRequest = async (req, res) => {
 
 const getParticipants = async (req, res) => {
   const chitId = req.params.id;
-console.log("ghai",chitId);
+  console.log("ghai", chitId);
   try {
     const participants = await Participants.find({ chitId });
     console.log(participants[0]?.participants);
@@ -473,77 +470,84 @@ console.log("ghai",chitId);
 };
 
 //remove user from chit
-const removeUserFromParticipants = async (req,res) => {
-  const{chitId,userId}=req.body
+const removeUserFromParticipants = async (req, res) => {
+  const { chitId, userId } = req.body;
   try {
     const chit = await Chitty.findById(chitId);
     if (!chit) {
-      res.json({dalete:false})
+      res.json({ dalete: false });
     }
     const currentDate = new Date();
     if (currentDate >= chit.startDate) {
-      res.json({dalete:false})
+      res.json({ dalete: false });
     }
     const result = await Participants.updateOne(
       { chitId },
       { $pull: { participants: userId } }
     );
-    res.json({dalete:true})
+    res.json({ dalete: true });
   } catch (error) {
-    res.json({dalete:false})
+    res.json({ dalete: false });
   }
 };
 
-
-const findUsersNotInParticipants = async (req,res) => {
-  const chitId=req.params.id
+const findUsersNotInParticipants = async (req, res) => {
+  const chitId = req.params.id;
   try {
     const participants = await Participants.findOne({ chitId });
 
     if (!participants) {
-      res.send([])
+      res.send([]);
     }
-    const participantUserIds = participants.participants.map(participant => participant.toString());
-    console.log(participantUserIds,"jjjjjjjjjjjjjjj");
-    const usersNotInParticipants = await User.find({ 
+    const participantUserIds = participants.participants.map((participant) =>
+      participant.toString()
+    );
+    console.log(participantUserIds, "jjjjjjjjjjjjjjj");
+    const usersNotInParticipants = await User.find({
       _id: { $nin: participantUserIds },
-      userType: { $ne: 'admin' } 
-    });   
+      userType: { $ne: "admin" },
+    });
     console.log(usersNotInParticipants);
     res.send(usersNotInParticipants);
   } catch (error) {
-    res.send([])
+    res.send([]);
   }
 };
-
 
 // Function to send an invitation to a user
 const sendInvitation = async (req, res) => {
   const { chitId, invitedUserId } = req.body;
-  console.log(req.body,"kkkkkkkkkkkkkkkkkkkk");
+  console.log(req.body, "kkkkkkkkkkkkkkkkkkkk");
 
   try {
-    const existingInvitation = await Invitation.findOne({ chitId, invitedUserId });
+    const existingInvitation = await Invitation.findOne({
+      chitId,
+      invitedUserId,
+    });
 
     if (existingInvitation) {
-     return res.json({add:false,message:"Already Invited"})
-    }
-    else{
-    const invitation = new Invitation({ chitId, invitedUserId });
-    await invitation.save();
-    return res.status(201).json({ add:true,message: "Invitation sent successfully" });
+      return res.json({ add: false, message: "Already Invited" });
+    } else {
+      const invitation = new Invitation({ chitId, invitedUserId });
+      await invitation.save();
+      return res
+        .status(201)
+        .json({ add: true, message: "Invitation sent successfully" });
     }
   } catch (error) {
     console.error("Error sending invitation:", error);
-    return res.status(500).json({add:false, message: "Cant Add" });
+    return res.status(500).json({ add: false, message: "Cant Add" });
   }
 };
 
 const getInvitationsForUser = async (req, res) => {
-  const userId = req.user.id
+  const userId = req.user.id;
 
   try {
-    const pendingInvitations = await Invitation.find({ invitedUserId: userId, status: 'pending' });
+    const pendingInvitations = await Invitation.find({
+      invitedUserId: userId,
+      status: "pending",
+    });
 
     res.status(200).json(pendingInvitations);
   } catch (error) {
@@ -554,14 +558,14 @@ const getInvitationsForUser = async (req, res) => {
 
 const acceptInvitation = async (req, res) => {
   const invitationId = req.body.invitationId;
-console.log(req.body,"pppppppppppppppppppp");
+  console.log(req.body, "pppppppppppppppppppp");
   try {
     const invitation = await Invitation.findById(invitationId);
     if (!invitation) {
       return res.status(404).json({ message: "Invitation not found" });
     }
-    console.log(invitation,"iiiiiiiiiiiiiiiiiiiiiiiiii");
-    invitation.status = 'accepted';
+    console.log(invitation, "iiiiiiiiiiiiiiiiiiiiiiiiii");
+    invitation.status = "accepted";
     await invitation.save();
 
     const chitId = invitation?.chitId;
@@ -609,14 +613,14 @@ const rejectInvitation = async (req, res) => {
 const updateProfile = async (req, res) => {
   console.log(req.file.location);
   try {
-    const userId = req.user.id; 
+    const userId = req.user.id;
     const { firstName, lastName } = req.body;
     const profilePicture = req.file ? req.file.location : null;
 
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (firstName) user.firstName = firstName;
@@ -625,26 +629,29 @@ const updateProfile = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({ message: 'Profile updated successfully', user: user });
+    res
+      .status(200)
+      .json({ message: "Profile updated successfully", user: user });
   } catch (error) {
-    console.error('Error updating profile:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error updating profile:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-const userProfile=async (req,res)=>{
-  const id=req.user.id;
-  const user=await User.findById(id)
-  res.send(user)
-}
-
+const userProfile = async (req, res) => {
+  const id = req.user.id;
+  const user = await User.findById(id);
+  res.send(user);
+};
 
 const getUserJoinedChits = async (req, res) => {
   const userId = req.user.id;
   try {
-    const userParticipants = await Participants.find({ participants: { $in: [userId] } });
+    const userParticipants = await Participants.find({
+      participants: { $in: [userId] },
+    });
     const joinedChits = [];
-    
+
     for (let i = 0; i < userParticipants.length; i++) {
       const participant = userParticipants[i];
       const chit = await Chitty.findById(participant.chitId);
@@ -655,52 +662,87 @@ const getUserJoinedChits = async (req, res) => {
 
     res.json(joinedChits);
   } catch (error) {
-    console.error('Error fetching joined chits:', error);
+    console.error("Error fetching joined chits:", error);
     res.status(500).send([]);
   }
 };
 
-
 // Controller function to get the status of each month
 getMonthlyStatus = async (req, res) => {
   try {
-    const chitId  = req.params.chitId;
-    const userId=req.user.id;
+    const chitId = req.params.chitId;
+    const userId = req.user.id;
 
     // Get the chit details including starting month and duration
     const chit = await Chitty.findById(chitId);
     if (!chit) {
-      return res.status(404).json({ error: 'Chit not found' });
+      return res.status(404).json({ error: "Chit not found" });
     }
 
     // Generate a list of months from starting month to chit end
-    const startingMonthParts = chit.StartingMonth.split('-');
+    const startingMonthParts = chit.StartingMonth.split("-");
     const startingMonth = parseInt(startingMonthParts[1]);
     const endingMonth = startingMonth + chit.duration - 1;
     const monthsList = [];
     for (let month = startingMonth; month <= endingMonth; month++) {
       monthsList.push(month.toString());
     }
-console.log(monthsList);
+    console.log(monthsList);
     // Get the payments for the chit
-    const payments = await Payment.find({ chitId,userId });
-
+    const payments = await Payment.find({ chitId, userId });
+    console.log("payments", payments);
     // Prepare the response with status of each month
     // Prepare the response with status of each month
-const monthlyStatus = monthsList.map(month => {
-  const monthNumber = parseInt(month);
-  console.log("month",monthNumber);
-  const monthName = new Date(Date.UTC(2000, monthNumber - 1, 1)).toLocaleString('en', { month: 'long' });
-  const isPaid = payments.some(payment => payment.month === month);
-  return { month: monthName, isPaid };
-});
+    const monthlyStatus = monthsList.map((month) => {
+      const monthNumber = parseInt(month);
+      console.log("month", monthNumber);
+      const monthName = new Date(
+        Date.UTC(2000, monthNumber - 1, 1)
+      ).toLocaleString("en", { month: "long" });
+      const isPaid = payments.some((payment) => payment.month === monthName);
+      return { month: monthName, isPaid };
+    });
 
     console.log(monthlyStatus);
     res.status(200).json(monthlyStatus);
   } catch (error) {
-    console.error('Error fetching monthly status:', error);
-    res.status(500).json({ error: 'An error occurred while fetching monthly status' });
+    console.error("Error fetching monthly status:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching monthly status" });
   }
+};
+
+const onSuccessPayment = async (req, res) => {
+  const userId = req.user.id;
+  const { chitId, month, amount } = req.body;
+  const payed = new Payment({
+    userId,
+    chitId,
+    amount,
+    month,
+    date: new Date(),
+  });
+  payed.save();
+  console.log("saved");
+};
+
+const getUsersWhoPaid = async (req, res) => {
+  const chitId = req.params.chitId;
+  const currentMonth = new Date().toLocaleString("default", { month: "long" });
+
+  Payment.find({ chitId, month: currentMonth })
+  .distinct('userId') // Extract unique user IDs
+  .then(async (userIds) => {
+    // Query the User collection to get user details based on user IDs
+    const users = await User.find({ _id: { $in: userIds } }, { _id: 1, firstName: 1, lastName: 1 });
+    console.log('Users with chitId', chitId, 'and month', currentMonth + ':', users);
+    res.send(users)
+  })
+  .catch((error) => {
+    console.error('Error fetching users:', error);
+    res.send([])
+  });
 };
 
 module.exports = {
@@ -726,11 +768,13 @@ module.exports = {
   removeUserFromParticipants,
   findUsersNotInParticipants,
   sendInvitation,
-  getInvitationsForUser ,
+  getInvitationsForUser,
   acceptInvitation,
   rejectInvitation,
   updateProfile,
   userProfile,
   getUserJoinedChits,
-  getMonthlyStatus
+  getMonthlyStatus,
+  onSuccessPayment,
+  getUsersWhoPaid,
 };

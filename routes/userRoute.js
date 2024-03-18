@@ -3,6 +3,7 @@ const router = express.Router();
 const userController=require("../controllers/chitController")
 const authenticateToken=require("../middlewares/authenticateToken")
 const upload=require("../Utilities/s3")
+const payment=require("../Utilities/razorpay")
 
 // to send otp to email
 router.post('/confirmEmail',authenticateToken, userController.sendEmailOtp)
@@ -90,5 +91,14 @@ router.get('/allJoinedChits',authenticateToken,userController.getUserJoinedChits
 
 //get monthly status
 router.get('/getMonthlyStatus/:chitId',authenticateToken,userController.getMonthlyStatus)
+
+//create payment order
+router.post('/createOrder',authenticateToken,payment.createOrder)
+
+//onSuccessPayment
+router.post('/onSuccessPayment',authenticateToken,userController.onSuccessPayment)
+
+//get users who paid
+router.get('/getUsersWhoPaid/:chitId',authenticateToken,userController.getUsersWhoPaid)
 
 module.exports=router

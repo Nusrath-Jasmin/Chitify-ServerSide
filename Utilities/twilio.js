@@ -2,6 +2,7 @@ const accountSid = process.env.ACCOUNTSIDTWILIO;
 const authId = process.env.AUTHTOCKENTWILIO;
 const serviceSid = process.env.SERVICESIDTWILIO;
 const countryCode = process.env.COUNTRYCODE;
+const messagingServiceSid =process.env.MESSAGE_SID;
 
 const twilio = require("twilio");
 const client = twilio(accountSid, authId);
@@ -32,8 +33,21 @@ const verifyOtp = async function (phone, otp) {
   }
 };
 
+//code to send message
+const sendMessage=async function(phone,message){
+  console.log("rem2");
+  client.messages
+  .create({
+    body: message,
+    messagingServiceSid: messagingServiceSid,
+    to: phone 
+  })
+  .then(message => console.log(message.sid))
+  .catch(error => console.error(error));
+}
 
 module.exports = {
   sendOtp,
-  verifyOtp
+  verifyOtp,
+  sendMessage
 }

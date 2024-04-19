@@ -2,6 +2,7 @@ const nodemailer = require("nodemailer");
 const requestModel = require("../models/RequestForAdmin");
 const UserModel = require("../models/userModel");
 const OwnerModel = require("../models/OwnerModel");
+const Chit= require("../models/ChitModel")
 
 const getAllRequest = async (req, res) => {
   const request = await requestModel.find();
@@ -82,9 +83,23 @@ const RejectRequest= async (req,res)=>{
     }}
 }
 
+const listUsers=async(req,res)=>{
+  const users=await UserModel.find({userType:{$ne:"admin"}})
+  res.send(users)
+}
+
+const listChits=async (req,res)=>{
+
+  const chits=await Chit.find()
+  res.send(chits)
+
+}
+
 module.exports = {
   getAllRequest,
   getUserDetails,
   AddAsOwner,
-  RejectRequest
+  RejectRequest,
+  listUsers,
+  listChits
 };

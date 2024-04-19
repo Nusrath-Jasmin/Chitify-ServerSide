@@ -34,6 +34,14 @@ const chittySchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
+  lotDate:{
+    type:Number,
+    required:true
+  },
+  StartingMonth:{
+    type:String,
+    required:true
+  }
 });
 
 const Chitty = mongoose.model("chitty", chittySchema);

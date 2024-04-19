@@ -6,7 +6,7 @@ const adminRoute=require('./routes/adminRoute');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const crone=require("./Utilities/reminder")
-
+const lotting=require("./Utilities/lotting")
 // Establishing database and server connection
 const app=express();
 require('./config/connection')(app);

@@ -8,6 +8,7 @@ const Request = require("../models/RequestToJoin");
 const User = require("../models/userModel");
 const Invitation = require("../models/Invitation");
 const Payment = require("../models/paymentModel");
+const Winner=require('../models/winners')
 
 let otp = "";
 // Function to generate a random OTP
@@ -745,6 +746,43 @@ const getUsersWhoPaid = async (req, res) => {
   });
 };
 
+const getWinners=async(req,res)=>{
+
+  const chitId=req.params.chitid
+  const winners = await Winner.find({ chitId });
+
+// Extract userIds from winners
+const winnerUserIds = winners.map(winner => winner.userId);
+
+// Fetch user details for each userId
+const users = await User.find({ _id: { $in: winnerUserIds } });
+
+// Prepare response data
+const responseData = winners.map(winner => {
+    // Find the corresponding user details
+    const correspondingUser = users.find(user => user._id.equals(winner.userId));
+    if (correspondingUser) {
+        return {
+            userId: winner.userId,
+            firstName: correspondingUser.firstName,
+            lastName: correspondingUser.lastName,
+            email: correspondingUser.email,
+            month: winner.month
+        };
+    } else {
+        console.error(`User not found for winner with ID: ${winner._id}`);
+        return null;
+    }
+});
+
+// Remove any null values from the response data
+const filteredResponseData = responseData.filter(data => data !== null);
+console.log(filteredResponseData);
+// Send the response data
+res.json(filteredResponseData);
+
+}
+
 module.exports = {
   sendEmailOtp,
   verifyEmailOtp,
@@ -777,4 +815,5 @@ module.exports = {
   getMonthlyStatus,
   onSuccessPayment,
   getUsersWhoPaid,
+  getWinners
 };

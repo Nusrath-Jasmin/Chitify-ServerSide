@@ -101,4 +101,7 @@ router.post('/onSuccessPayment',authenticateToken,userController.onSuccessPaymen
 //get users who paid
 router.get('/getUsersWhoPaid/:chitId',authenticateToken,userController.getUsersWhoPaid)
 
+//get winners of the chit
+router.get('/getWinners/:chitid',authenticateToken,userController.getWinners)
+
 module.exports=router

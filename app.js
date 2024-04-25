@@ -16,6 +16,6 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(cors());
 
-app.use('/', commonRoutes);
-app.use('/user',userRoute);
-app.use('/admin',adminRoute);
+app.use('/api', commonRoutes);
+app.use('/api/user',userRoute);
+app.use('/api/admin',adminRoute);
